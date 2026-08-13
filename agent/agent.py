@@ -2,11 +2,15 @@ from typing import Dict, List, Any, Optional
 from dotenv import load_dotenv
 from pydantic import ValidationError
 from langchain_core.messages import HumanMessage
+from langchain_core.language_models.chat_models import BaseChatModel
 from langchain.chat_models import init_chat_model
 
 from server.rag.verifier import self_rag_verify
 from memory.memory import ShortTermMemory
 from context_eval.strategies import recursive_summarization
+from algorithms.decomposition import decompose_goal, execute_plan, final_output
+from algorithms.dynamic_decomposition import dynamic_decomposition
+from algorithms.models import Plan
 
 from .schema import (
     ACTION_INPUT_SCHEMAS,
@@ -18,6 +22,75 @@ from .schema import (
 )
 
 load_dotenv()
+
+
+def get_base_llm() -> BaseChatModel:
+    """Returns the default BaseChatModel for decomposition and planning tasks."""
+    return init_chat_model(
+        model="llama-3.3-70b-versatile",
+        model_provider="groq",
+        max_tokens=1024,
+        temperature=0.1,
+        max_retries=3,
+    )
+
+
+def initialize_plan(
+    goal: str,
+    memory: ShortTermMemory,
+    llm: Optional[BaseChatModel] = None,
+    dynamic: bool = False,
+) -> Optional[Plan]:
+    """
+    Decomposes a user goal using static DAG decomposition (or dynamic decomposition)
+    and initializes the planning scratchpad with the current plan and active subgoal.
+    """
+    base_llm = llm or get_base_llm()
+    try:
+        if dynamic:
+            history = dynamic_decomposition(goal=goal, llm=base_llm, max_steps=4)
+            if history:
+                tasks_summary = "\n".join(f"- {task}: {result}" for task, result in history)
+                memory.scratchpad["plan"] = tasks_summary
+                memory.scratchpad["current_subgoal"] = history[-1][0] if history else None
+                memory.scratchpad["dynamic_history"] = history
+            return None
+        else:
+            plan = decompose_goal(goal=goal, llm=base_llm)
+            ordered_tasks = plan.topological_order()
+            tasks_repr = "\n".join(
+                f"[{t.id}] {t.instruction} (depends on: {', '.join(t.depends_on) or 'none'})"
+                for t in plan.tasks
+            )
+            memory.scratchpad["plan"] = tasks_repr
+            memory.scratchpad["plan_dag"] = plan
+            first_task = plan.task(ordered_tasks[0]) if ordered_tasks else None
+            memory.scratchpad["current_subgoal"] = (
+                f"[{first_task.id}] {first_task.instruction}" if first_task else None
+            )
+            return plan
+    except Exception as e:
+        print(f"[Plan Initialization Warning]: Could not decompose goal: {e}")
+        return None
+
+
+def run_static_plan(goal: str, llm: Optional[BaseChatModel] = None, max_workers: int = 4) -> str:
+    """
+    Decomposes a goal into a DAG plan, executes all task nodes in topological batches,
+    and returns the final synthesized output.
+    """
+    base_llm = llm or get_base_llm()
+    plan = decompose_goal(goal=goal, llm=base_llm)
+    outputs = execute_plan(plan=plan, llm=base_llm, max_workers=max_workers)
+    return final_output(plan=plan, outputs=outputs)
+
+
+def run_dynamic_plan(goal: str, llm: Optional[BaseChatModel] = None, max_steps: int = 4) -> list[tuple[str, str]]:
+    """
+    Runs adaptive dynamic decomposition step-by-step until the goal is met.
+    """
+    base_llm = llm or get_base_llm()
+    return dynamic_decomposition(goal=goal, llm=base_llm, max_steps=max_steps)
 
 
 def build_structured_model(action_names: List[str]):
@@ -62,8 +135,18 @@ async def tool_call(client, step: AgentStep) -> Any:
     return result
 
 
-async def agent_step(client, memory: ShortTermMemory, user_input: str) -> Optional[AgentStep]:
+async def agent_step(
+    client,
+    memory: ShortTermMemory,
+    user_input: str,
+    llm: Optional[BaseChatModel] = None,
+    use_dynamic_plan: bool = False,
+) -> Optional[AgentStep]:
     memory.add_user(user_input)
+
+    # Initialize plan decomposition in scratchpad if not already populated
+    if not memory.scratchpad.get("plan"):
+        initialize_plan(user_input, memory, llm=llm, dynamic=use_dynamic_plan)
 
     tools = await discover_tools(client)
     current_tool_names = sorted(tools.keys())
@@ -117,8 +200,10 @@ async def agent_step(client, memory: ShortTermMemory, user_input: str) -> Option
 
         # Update planning scratchpad if updated in step
         if getattr(step, "plan_updated", False):
-            memory.scratchpad["plan"] = getattr(step, "new_plan", None)
-            memory.scratchpad["current_subgoal"] = getattr(step, "next_subgoal", None)
+            if getattr(step, "new_plan", None):
+                memory.scratchpad["plan"] = step.new_plan
+            if getattr(step, "next_subgoal", None):
+                memory.scratchpad["current_subgoal"] = step.next_subgoal
 
         if handle_final_action(step):
             answer_text = str(step.action_input.get("answer") if isinstance(step.action_input, dict) else step.action_input)

@@ -15,10 +15,10 @@ class AgentStep(BaseModel):
     thought: str
     action: str
     action_input: Optional[dict] = None
-    plan_updated: bool
+    plan_updated: bool = False
     new_plan: Optional[str] = None
     next_subgoal: Optional[str] = None
-    is_final: bool
+    is_final: bool = False
 
 
 def build_agent_step_model(action_names: List[str]):
@@ -34,8 +34,12 @@ def build_agent_step_model(action_names: List[str]):
         thought=(str, ...),
         action=(Literal[allowed], ...),
         action_input=(dict, Field(default_factory=dict)),
-        is_final=(bool, ...),
+        plan_updated=(bool, Field(default=False, description="True if the plan or subgoal was updated")),
+        new_plan=(Optional[str], Field(default=None, description="Updated multi-step plan")),
+        next_subgoal=(Optional[str], Field(default=None, description="Next subgoal to achieve")),
+        is_final=(bool, Field(default=False, description="True if this is the final step")),
     )
+
 
 
 # ==========================================================
