@@ -36,7 +36,7 @@ load_dotenv()
 
 
 # ============================================================
-# 20 Real Cases: Reshuffling Tuesday's Dispatch Board
+# 20 Real Cases
 # ============================================================
 
 TUESDAY_BOARD_CASES = [
