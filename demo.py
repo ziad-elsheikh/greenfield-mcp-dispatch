@@ -25,6 +25,10 @@ from dotenv import load_dotenv
 
 from langchain.chat_models import init_chat_model
 from langchain_core.language_models.chat_models import BaseChatModel
+# Imports of Planning Algorithms
+from algorithms.plan_and_solve import run_plan_and_solve
+from algorithms.tree_of_thought import run_tree_of_thoughts
+from algorithms.lats import run_lats
 
 from algorithms.decomposition import decompose_goal, execute_plan, final_output
 from algorithms.dynamic_decomposition import dynamic_decomposition
@@ -187,12 +191,21 @@ def estimate_cost(tokens: int, cost_per_1k: float = 0.0006) -> float:
     """Estimated cost per run in USD based on model token rates."""
     return round((tokens / 1000.0) * cost_per_1k, 4)
 
-
 def evaluate_success(output: str, keywords: List[str]) -> bool:
     """Checks if the model addressed key constraints."""
     text = output.lower()
     matches = sum(1 for kw in keywords if kw.lower() in text)
     return matches >= max(1, len(keywords) // 2)
+  
+# Router to execute Sub-task using your Planning Algorithms
+async def execute_subtask_planning(task: Task, context: str, method: str = "plan_and_solve", llm=None) -> Dict[str, Any]:
+    if method == "plan_and_solve":
+        return await run_plan_and_solve(task, context, llm=llm)
+    elif method == "tree_of_thought":
+        return await run_tree_of_thoughts(task, context, beam_width=3, llm=llm)
+    elif method == "lats":
+        return await run_lats(task, context, iterations=2, llm=llm)
+    return {}
 
 
 # ============================================================
