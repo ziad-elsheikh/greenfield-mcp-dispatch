@@ -1,3 +1,7 @@
+from algorithms.plan_and_solve import plan_and_solve
+from algorithms.tree_of_thoughts import tree_of_thoughts
+from algorithms.lats import lats
+
 from typing import Dict, List, Any, Optional
 from dotenv import load_dotenv
 from pydantic import ValidationError
@@ -116,8 +120,7 @@ def validate_step(step: AgentStep, tools: Dict[str, Any]) -> bool:
 def handle_final_action(step: AgentStep) -> bool:
     """Check if the step represents a terminal state."""
     return step.action in TERMINAL_ACTIONS
-
-
+    
 async def tool_call(client, step: AgentStep) -> Any:
     payload = step.action_input or {}
 
@@ -133,8 +136,7 @@ async def tool_call(client, step: AgentStep) -> Any:
     # Invoke tool via MCP client call interface
     result = await client.call_tool(step.action, mcp_payload)
     return result
-
-
+    
 async def agent_step(
     client,
     memory: ShortTermMemory,
