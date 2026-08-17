@@ -22,7 +22,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from server.rag.retrievers import naive_rag_search, hybrid_search, agentic_rag_search
 from server.rag.verifier import self_rag_verify
 
-llm = init_chat_model(model="llama-3.3-70b-versatile", model_provider="groq", max_tokens=1024)
+llm = init_chat_model(model="openai/gpt-oss-120b", model_provider="groq", max_tokens=1024)
 
 
 # ============================================================

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from langchain_core.language_models.chat_models import BaseChatModel
-from ..models import EnvironmentFeedback
+from .models import EnvironmentFeedback
 from .environment import Environment
 
 

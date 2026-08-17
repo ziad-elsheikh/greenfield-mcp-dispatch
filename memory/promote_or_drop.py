@@ -22,7 +22,7 @@ Item: {item}"""
 
 def decide_memory_fate(item: str) -> MemoryRoutingDecision:
     structured_model = init_chat_model(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         model_provider="groq",
         max_tokens=1024,
     ).with_structured_output(MemoryRoutingDecision)

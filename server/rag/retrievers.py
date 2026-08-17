@@ -4,7 +4,7 @@ from .vector_store import collection, get_embedding
 from dotenv import load_dotenv
 
 load_dotenv()
-llm = init_chat_model(model="llama-3.3-70b-versatile", model_provider="groq")
+llm = init_chat_model(model="openai/gpt-oss-120b", model_provider="groq")
 
 # 1. Naive RAG
 def naive_rag_search(query: str, top_k: int = 3, source_doc: str = None) -> list[str]:

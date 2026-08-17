@@ -1,6 +1,9 @@
 from algorithms.plan_and_solve import plan_and_solve
-from algorithms.tree_of_thoughts import tree_of_thoughts
+from algorithms.tree_of_thought import tree_of_thoughts
 from algorithms.lats import lats
+from algorithms.reflexion import reflexion
+from algorithms.self_refine import reflect_and_refine
+from algorithms.environment import Environment, GreenfieldEnvironment
 
 from typing import Dict, List, Any, Optional
 from dotenv import load_dotenv
@@ -31,7 +34,7 @@ load_dotenv()
 def get_base_llm() -> BaseChatModel:
     """Returns the default BaseChatModel for decomposition and planning tasks."""
     return init_chat_model(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         model_provider="groq",
         max_tokens=1024,
         temperature=0.1,
@@ -100,7 +103,7 @@ def run_dynamic_plan(goal: str, llm: Optional[BaseChatModel] = None, max_steps: 
 def build_structured_model(action_names: List[str]):
     step_model = build_agent_step_model(action_names)
     return init_chat_model(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         model_provider="groq",
         max_tokens=1024,
         temperature=0.1,
@@ -127,20 +130,37 @@ async def execute_subtask_with_algorithm(
     method: str = "plan_and_solve",
     llm: Optional[BaseChatModel] = None,
     environment: Optional[Any] = None,
+    draft: Optional[str] = None,
 ) -> Any:
     """
-    Executes a sub-task using one of the 3 planning algorithms: PS, ToT, or LATS.
+    Executes a sub-task using any of the 7 algorithms in the repository:
+      - 'plan_and_solve' / 'ps': Plan-and-Solve 2-stage prompting.
+      - 'tree_of_thoughts' / 'tot': Tree of Thoughts beam search exploration.
+      - 'lats': Language Agent Tree Search with grounded environment & value estimation.
+      - 'reflexion': Iterative trial loop with episodic memory & environment feedback.
+      - 'self_refine' / 'refine': Iterative critique and refinement using rubric & deterministic checks.
+      - 'static_decomposition' / 'dag': Full DAG task generation and parallel batch execution.
+      - 'dynamic_decomposition' / 'dynamic': Adaptive step-by-step decision and execution loop.
     """
     base_llm = llm or get_base_llm()
+    env = environment or GreenfieldEnvironment()
     
-    if method == "plan_and_solve":
+    normalized_method = method.lower().strip()
+    if normalized_method in ("plan_and_solve", "ps"):
         return plan_and_solve(question=task_instruction, llm=base_llm)
-    elif method == "tree_of_thoughts":
+    elif normalized_method in ("tree_of_thoughts", "tree_of_thought", "tot"):
         return tree_of_thoughts(problem=task_instruction, llm=base_llm, depth=2, beam_width=2)
-    elif method == "lats":
-        if not environment:
-            raise ValueError("LATS requires an Environment instance.")
-        return lats(task=task_instruction, llm=base_llm, environment=environment, iterations=2)
+    elif normalized_method == "lats":
+        return lats(task=task_instruction, llm=base_llm, environment=env, iterations=2)
+    elif normalized_method == "reflexion":
+        return reflexion(task=task_instruction, llm=base_llm, environment=env, max_trials=3)
+    elif normalized_method in ("self_refine", "refine"):
+        target_draft = draft or task_instruction
+        return reflect_and_refine(goal=task_instruction, draft=target_draft, llm=base_llm)
+    elif normalized_method in ("static_decomposition", "dag", "plan"):
+        return run_static_plan(goal=task_instruction, llm=base_llm)
+    elif normalized_method in ("dynamic_decomposition", "dynamic"):
+        return run_dynamic_plan(goal=task_instruction, llm=base_llm)
     else:
         raise ValueError(f"Unknown planning algorithm method: {method}")
 

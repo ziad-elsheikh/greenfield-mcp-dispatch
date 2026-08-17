@@ -1,8 +1,21 @@
+from __future__ import annotations
+
+import os
+import sys
+import asyncio
 import sqlite3
+import jsonschema
+from typing import Literal, Optional, List
 from fastmcp import Context
-from rag.retrievers import hybrid_search
-from rag.verifier import self_rag_verify
 from pydantic import BaseModel, Field, ConfigDict
+
+try:
+    from server.rag.retrievers import hybrid_search
+    from server.rag.verifier import self_rag_verify
+except ImportError:
+    from rag.retrievers import hybrid_search
+    from rag.verifier import self_rag_verify
+
 
 def get_db_connection():
     # Fallback path creation if db folder is missing
@@ -19,18 +32,22 @@ def get_db_connection():
     conn.commit()
     return conn
 
+
 class PaymentInput(BaseModel):
     model_config = ConfigDict(extra='forbid')
     customer_id: int = Field(description="ID of the customer making the payment")
 
+
 class BatchDispatchInput(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    equipment_ids: List[int] = Field(description="List of equipment IDs to dispatch")
+    equipment_ids: list[int] = Field(description="List of equipment IDs to dispatch")
     field_id: int = Field(description="The target field ID for the batch job")
+
 
 class IncidentInput(BaseModel):
     model_config = ConfigDict(extra='forbid')
     raw_note: str = Field(description="Unstructured incident note from the field")
+
 
 class DispatchInput(BaseModel):
     model_config = ConfigDict(extra='forbid')
@@ -40,13 +57,23 @@ class DispatchInput(BaseModel):
     chemical_id: Optional[int] = Field(default=None, description="Required only when job_type is spray")
     customer_id: int = Field(description="ID of the authenticated customer")
 
+
 class KnowledgeSearchInput(BaseModel):
     model_config = ConfigDict(extra='forbid')
     query: str = Field(description="Search query for agricultural manuals, policies, or procedures.")
 
+
 class SignoffResponse(BaseModel):
     approved: bool = Field(description="Whether the human approves this chemical dispatch")
     notes: str = Field(default="", description="Optional reasoning for the decision")
+
+
+PaymentInput.model_rebuild()
+BatchDispatchInput.model_rebuild()
+IncidentInput.model_rebuild()
+DispatchInput.model_rebuild()
+KnowledgeSearchInput.model_rebuild()
+SignoffResponse.model_rebuild()
 
 
 #============================================

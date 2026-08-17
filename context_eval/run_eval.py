@@ -28,7 +28,7 @@ from strategies import (
 )
 load_dotenv()
 
-llm = init_chat_model(model="llama-3.3-70b-versatile", model_provider="groq", max_tokens=1024)
+llm = init_chat_model(model="openai/gpt-oss-120b", model_provider="groq", max_tokens=1024)
 
 
 # ============================================================

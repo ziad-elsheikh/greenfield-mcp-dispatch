@@ -33,7 +33,7 @@ class SemanticConsolidator:
     def __init__(self, long_term_memory: LongTermMemory):
         self.long_term = long_term_memory
         self.model = init_chat_model(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             model_provider="groq",
             temperature=0.0,
             max_tokens=2048,

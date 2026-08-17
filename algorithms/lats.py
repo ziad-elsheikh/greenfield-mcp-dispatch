@@ -232,3 +232,35 @@ def flatten_lats_tree(root: LATSNode) -> list[dict]:
         )
         queue.extend((child, node_id) for child in node.children)
     return records
+
+
+async def run_lats(
+    task: Any,
+    context: str = "",
+    iterations: int = 2,
+    n_actions: int = 2,
+    exploration_weight: float = 1.414,
+    llm: BaseChatModel | None = None,
+    environment: Environment | None = None,
+) -> dict[str, Any]:
+    task_str = task.instruction if hasattr(task, "instruction") else str(task)
+    prompt = f"Task: {task_str}\nContext: {context}" if context else task_str
+    if llm is None:
+        raise ValueError("An LLM instance must be provided to run_lats")
+    env = environment or Environment()
+    result = lats(
+        task=prompt,
+        llm=llm,
+        environment=env,
+        iterations=iterations,
+        n_actions=n_actions,
+        exploration_weight=exploration_weight,
+    )
+    return {
+        "success": result.success,
+        "output": result.output,
+        "best_score": result.best_score,
+        "iterations": result.iterations,
+        "tree": flatten_lats_tree(result.root),
+    }
+

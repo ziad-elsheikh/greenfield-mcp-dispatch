@@ -1,19 +1,44 @@
-from dotenv import load_dotenv
-load_dotenv()
+from __future__ import annotations
 
 import os
 import sys
 import asyncio
 import jsonschema
+from dotenv import load_dotenv
+
+load_dotenv()
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
 import mcp.types as types 
 from fastmcp import FastMCP 
 from typing import Literal, Optional, List
 from mcp.types import ElicitRequestedSchema
-from tools import *
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
-sys.path.append(parent_dir)
+try:
+    from server.tools import (
+        get_db_connection,
+        search_agricultural_knowledge,
+        process_payment,
+        batch_dispatch,
+        log_incident_note,
+        dispatch_equipment,
+    )
+except ImportError:
+    from tools import (
+        get_db_connection,
+        search_agricultural_knowledge,
+        process_payment,
+        batch_dispatch,
+        log_incident_note,
+        dispatch_equipment,
+    )
+
 
 # Initialize FastMCP server for Greenfield
 mcp = FastMCP("Greenfield-Dispatch-Server")

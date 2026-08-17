@@ -1,3 +1,4 @@
+from typing import Any, Optional
 from langchain_core.language_models.chat_models import BaseChatModel
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -53,3 +54,23 @@ Score correctness, feasibility, and progress. Do not reward confident wording.""
         if not frontier:
             break
     return frontier
+
+
+async def run_tree_of_thoughts(
+    task: Any,
+    context: str = "",
+    beam_width: int = 3,
+    depth: int = 2,
+    llm: Optional[BaseChatModel] = None,
+) -> dict[str, Any]:
+    task_str = task.instruction if hasattr(task, "instruction") else str(task)
+    prompt = f"Problem: {task_str}\nContext: {context}" if context else task_str
+    if llm is None:
+        raise ValueError("An LLM instance must be provided to run_tree_of_thoughts")
+    thoughts = tree_of_thoughts(problem=prompt, llm=llm, depth=depth, beam_width=beam_width)
+    best_thought = thoughts[0] if thoughts else None
+    return {
+        "status": "success",
+        "best_thought": best_thought.model_dump() if best_thought else None,
+        "thoughts": [t.model_dump() for t in thoughts],
+    }
