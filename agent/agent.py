@@ -161,8 +161,7 @@ async def tool_call(client, step: AgentStep) -> Any:
     # Invoke tool via MCP client call interface
     result = await client.call_tool(step.action, mcp_payload)
     return result
-
-
+    
 async def agent_step(
     client,
     memory: ShortTermMemory,
