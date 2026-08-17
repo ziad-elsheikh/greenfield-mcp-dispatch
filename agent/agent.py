@@ -108,6 +108,7 @@ def build_structured_model(action_names: List[str]):
     ).with_structured_output(step_model)
 
 
+
 async def discover_tools(client) -> Dict[str, Any]:
     tools_list = await client.list_tools()
     return {tool.name: tool for tool in tools_list}
@@ -121,6 +122,30 @@ def handle_final_action(step: AgentStep) -> bool:
     """Check if the step represents a terminal state."""
     return step.action in TERMINAL_ACTIONS
     
+async def execute_subtask_with_algorithm(
+    task_instruction: str,
+    method: str = "plan_and_solve",
+    llm: Optional[BaseChatModel] = None,
+    environment: Optional[Any] = None,
+) -> Any:
+    """
+    Executes a sub-task using one of the 3 planning algorithms: PS, ToT, or LATS.
+    """
+    base_llm = llm or get_base_llm()
+    
+    if method == "plan_and_solve":
+        return plan_and_solve(question=task_instruction, llm=base_llm)
+    elif method == "tree_of_thoughts":
+        return tree_of_thoughts(problem=task_instruction, llm=base_llm, depth=2, beam_width=2)
+    elif method == "lats":
+        if not environment:
+            raise ValueError("LATS requires an Environment instance.")
+        return lats(task=task_instruction, llm=base_llm, environment=environment, iterations=2)
+    else:
+        raise ValueError(f"Unknown planning algorithm method: {method}")
+
+
+
 async def tool_call(client, step: AgentStep) -> Any:
     payload = step.action_input or {}
 
