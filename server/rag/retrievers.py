@@ -2,9 +2,10 @@ from rank_bm25 import BM25Okapi
 from langchain.chat_models import init_chat_model
 from .vector_store import collection, get_embedding
 from dotenv import load_dotenv
+from config import MODEL_NAME, MODEL_PROVIDER
 
 load_dotenv()
-llm = init_chat_model(model="openai/gpt-oss-120b", model_provider="groq")
+llm = init_chat_model(model=MODEL_NAME, model_provider=MODEL_PROVIDER)
 
 # 1. Naive RAG
 def naive_rag_search(query: str, top_k: int = 3, source_doc: str = None) -> list[str]:

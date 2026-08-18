@@ -19,6 +19,7 @@ from algorithms.decomposition import decompose_goal, execute_plan, final_output
 from algorithms.dynamic_decomposition import dynamic_decomposition
 from algorithms.models import Plan
 
+from config import MODEL_NAME, MODEL_PROVIDER
 from .schema import (
     ACTION_INPUT_SCHEMAS,
     AgentStep,
@@ -34,8 +35,8 @@ load_dotenv()
 def get_base_llm() -> BaseChatModel:
     """Returns the default BaseChatModel for decomposition and planning tasks."""
     return init_chat_model(
-        model="openai/gpt-oss-120b",
-        model_provider="groq",
+        model=MODEL_NAME,
+        model_provider=MODEL_PROVIDER,
         max_tokens=1024,
         temperature=0.1,
         max_retries=3,
@@ -103,8 +104,8 @@ def run_dynamic_plan(goal: str, llm: Optional[BaseChatModel] = None, max_steps: 
 def build_structured_model(action_names: List[str]):
     step_model = build_agent_step_model(action_names)
     return init_chat_model(
-        model="openai/gpt-oss-120b",
-        model_provider="groq",
+        model=MODEL_NAME,
+        model_provider=MODEL_PROVIDER,
         max_tokens=1024,
         temperature=0.1,
         max_retries=3,

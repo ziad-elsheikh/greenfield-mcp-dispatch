@@ -1,7 +1,7 @@
 from typing import Literal, Optional
 from pydantic import BaseModel
 from langchain.chat_models import init_chat_model
-
+from config import MODEL_NAME , MODEL_PROVIDER
 class MemoryRoutingDecision(BaseModel):
     reasoning: str
     destination: Literal["forget", "episodic"]
@@ -22,8 +22,8 @@ Item: {item}"""
 
 def decide_memory_fate(item: str) -> MemoryRoutingDecision:
     structured_model = init_chat_model(
-        model="openai/gpt-oss-120b",
-        model_provider="groq",
+        model=MODEL_NAME,
+        model_provider=MODEL_PROVIDER,
         max_tokens=1024,
     ).with_structured_output(MemoryRoutingDecision)
 

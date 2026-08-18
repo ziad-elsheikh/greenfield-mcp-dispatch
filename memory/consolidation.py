@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from langchain.chat_models import init_chat_model
 from memory.memory import LongTermMemory
-
+from config import MODEL_NAME, MODEL_PROVIDER
 class FactUpdate(BaseModel):
     fact_key: str = Field(description="Unique snake_case identifier (e.g. 'customer_1_buffer_rule')")
     extracted_value: str = Field(description="Detailed fact statement including IDs and values.")
@@ -33,8 +33,8 @@ class SemanticConsolidator:
     def __init__(self, long_term_memory: LongTermMemory):
         self.long_term = long_term_memory
         self.model = init_chat_model(
-            model="openai/gpt-oss-120b",
-            model_provider="groq",
+            model=MODEL_NAME,
+            model_provider=MODEL_PROVIDER,
             temperature=0.0,
             max_tokens=2048,
         ).with_structured_output(ConsolidationBatch)

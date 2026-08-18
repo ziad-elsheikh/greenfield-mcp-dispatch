@@ -1,9 +1,11 @@
 from pydantic import BaseModel, Field
 from langchain.chat_models import init_chat_model
 from dotenv import load_dotenv
+
+from config import MODEL_NAME , MODEL_PROVIDER
 load_dotenv()
 
-llm = init_chat_model(model="openai/gpt-oss-120b", model_provider="groq")
+llm = init_chat_model(model=MODEL_NAME, model_provider=MODEL_PROVIDER)
 
 class VerificationResult(BaseModel):
     is_relevant: bool = Field(description="Is the retrieved content relevant to the query?")

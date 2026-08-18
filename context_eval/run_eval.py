@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, BaseMessage
+from config import MODEL_NAME , MODEL_PROVIDER
 
 from strategies import (
     sliding_window,
@@ -28,7 +29,7 @@ from strategies import (
 )
 load_dotenv()
 
-llm = init_chat_model(model="openai/gpt-oss-120b", model_provider="groq", max_tokens=1024)
+llm = init_chat_model(model=MODEL_NAME, model_provider=MODEL_PROVIDER, max_tokens=1024)
 
 
 # ============================================================
