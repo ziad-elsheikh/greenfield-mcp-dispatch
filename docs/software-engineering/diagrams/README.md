@@ -40,3 +40,6 @@ This catalog lists every standalone Mermaid (`.mmd`) architecture diagram create
 | [`workflow-01.mmd`](./to-be/workflow-01.mmd) | Sequence | Target dispatch workflow with live SQL buffer checking and contextual mobile sign-off. | 🔵 TO-BE |
 | [`workflow-02.mmd`](./to-be/workflow-02.mmd) | Sequence | Target reshuffle workflow with Grounded MCTS (LATS) and live database constraint validation. | 🔵 TO-BE |
 | [`workflow-03.mmd`](./to-be/workflow-03.mmd) | Sequence | Target multi-stage RAG search workflow with Cross-Encoder reranking and citation grounding. | 🔵 TO-BE |
+| [`workflow-04-finance.mmd`](./to-be/workflow-04-finance.mmd) | StateGraph | Autonomous Finance Agent workflow with financial advice, underwriting, HITL admin review, and disbursement. | 🔵 TO-BE |
+| [`workflow-05-fertilizer-followup.mmd`](./to-be/workflow-05-fertilizer-followup.mmd) | State Machine | Persistent fertilizer recommendation and adaptive follow-up state machine with deficiency revision loops. | 🔵 TO-BE |
+

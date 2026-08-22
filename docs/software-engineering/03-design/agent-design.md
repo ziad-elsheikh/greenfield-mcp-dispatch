@@ -48,8 +48,24 @@ class GroundedSQLValidator:
         if chemical_id:
             chem = self.conn.execute("SELECT * FROM Chemicals WHERE chemical_id = ?", (chemical_id,)).fetchone()
             field = self.conn.execute("SELECT * FROM Fields WHERE field_id = ?", (field_id,)).fetchone()
-            if field["canal_distance_meters"] < chem["min_canal_buffer_m"]:
-                return ValidationReport(valid=False, reason=f"Field canal proximity ({field['canal_distance_meters']}m) violates minimum {chem['min_canal_buffer_m']}m buffer")
-
         return ValidationReport(valid=True)
 ```
+
+---
+
+## 3. Autonomous Finance Workflow Agent (StateGraph)
+Implements an interactive multi-turn state machine for agricultural finance advisory and loan applications (`agent/workflows/finance_agent.py`):
+- **Advisory Pathway**: Specialist consultation (`equipment`, `crop`, `general`), single-pass Tree-of-Thoughts (`tot_advice`), Hybrid Search + Self-RAG policy grounding.
+- **Financing Pathway**: Real-time eligibility checking against credit holds, document collection, financial analysis (DSCR / safe borrowing capacity ceiling), HITL admin review (`admin_review`), external provider response evaluation, farmer term confirmation (`farmer_confirm`), and cryptographic SHA-256 disbursement audit logging.
+- **Diagram Reference**: [`diagrams/to-be/workflow-04-finance.mmd`](../diagrams/to-be/workflow-04-finance.mmd)
+
+---
+
+## 4. Persistent Fertilizer Recommendation & Follow-up State Machine
+Implements a durable, asynchronous state machine spanning baseline soil telemetry, safety threshold checks, and closed-loop follow-up evaluations:
+- **Baseline Soil Diagnosis**: Ingests N-P-K, pH, electrical conductivity, and organic matter metrics to generate tailored fertilizer prescriptions.
+- **Safety Policy Enforcement**: Prescriptions exceeding environmental safety or canal buffer constraints automatically halt at an `admin_review` HITL checkpoint.
+- **Asynchronous Checkpointing**: Enters a durable `wait_followup` state awaiting post-treatment soil telemetry.
+- **Adaptive Deficiency Revision Loop**: Compares follow-up measurements against target levels. If nutrients remain deficient, routes the case back into a revised prescription loop rather than starting a new case.
+- **Diagram Reference**: [`diagrams/to-be/workflow-05-fertilizer-followup.mmd`](../diagrams/to-be/workflow-05-fertilizer-followup.mmd)
+

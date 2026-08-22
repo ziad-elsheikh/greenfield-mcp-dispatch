@@ -101,6 +101,35 @@ erDiagram
         datetime timestamp
     }
 
+    FINANCING_APPLICATIONS {
+        int application_id PK
+        int customer_id FK
+        int field_id FK
+        float requested_amount
+        string purpose
+        string status
+        int admin_approved_by FK
+        string provider_reference
+        float interest_rate
+        int term_months
+        float monthly_payment
+        boolean farmer_accepted
+        string rejection_reason
+        datetime created_at
+        datetime updated_at
+    }
+
+    FINANCIAL_TRANSACTIONS {
+        int transaction_id PK
+        int application_id FK
+        int customer_id FK
+        string transaction_type
+        float amount
+        string status
+        string verification_hash
+        datetime created_at
+    }
+
     CUSTOMERS ||--o{ FIELDS : "owns"
     FIELDS ||--o{ DISPATCH_JOBS : "receives"
     EQUIPMENT ||--o{ DISPATCH_JOBS : "assigned"
@@ -111,3 +140,9 @@ erDiagram
     TECHNICIANS ||--o{ INCIDENT_NOTES : "reports"
     DISPATCH_JOBS ||--o{ INCIDENT_NOTES : "triggers"
     TECHNICIANS ||--o{ FLEET_REPORTS : "produces"
+    CUSTOMERS ||--o{ FINANCING_APPLICATIONS : "applies_for"
+    FIELDS ||--o{ FINANCING_APPLICATIONS : "collateral_or_target"
+    TECHNICIANS ||--o{ FINANCING_APPLICATIONS : "admin_approves"
+    FINANCING_APPLICATIONS ||--o{ FINANCIAL_TRANSACTIONS : "generates"
+    CUSTOMERS ||--o{ FINANCIAL_TRANSACTIONS : "participates_in"
+
