@@ -191,3 +191,95 @@ CREATE TABLE Fleet_Reports (
     FOREIGN KEY (generated_by)
         REFERENCES Technicians(technician_id)
 );
+
+-- ==========================
+-- Financing Applications
+-- ==========================
+CREATE TABLE Financing_Applications (
+    application_id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    customer_id INTEGER NOT NULL,
+    field_id INTEGER,
+
+    requested_amount REAL NOT NULL,
+    purpose TEXT NOT NULL,
+
+    status TEXT NOT NULL DEFAULT 'pending_eligibility'
+        CHECK (
+            status IN (
+                'pending_eligibility',
+                'pending_documents',
+                'under_review',
+                'submitted',
+                'approved',
+                'rejected',
+                'disbursed',
+                'cancelled'
+            )
+        ),
+
+    admin_approved_by INTEGER,
+    provider_reference TEXT,
+    interest_rate REAL,
+    term_months INTEGER,
+    monthly_payment REAL,
+    farmer_accepted BOOLEAN,
+    rejection_reason TEXT,
+
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (customer_id)
+        REFERENCES Customers(customer_id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (field_id)
+        REFERENCES Fields(field_id)
+        ON DELETE SET NULL,
+
+    FOREIGN KEY (admin_approved_by)
+        REFERENCES Technicians(technician_id)
+);
+
+-- ==========================
+-- Financial Transactions
+-- ==========================
+CREATE TABLE Financial_Transactions (
+    transaction_id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    application_id INTEGER NOT NULL,
+    customer_id INTEGER NOT NULL,
+
+    transaction_type TEXT NOT NULL
+        CHECK (
+            transaction_type IN (
+                'disbursement',
+                'repayment',
+                'fee',
+                'adjustment'
+            )
+        ),
+
+    amount REAL NOT NULL,
+
+    status TEXT NOT NULL DEFAULT 'completed'
+        CHECK (
+            status IN (
+                'pending',
+                'completed',
+                'failed',
+                'reverted'
+            )
+        ),
+
+    verification_hash TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (application_id)
+        REFERENCES Financing_Applications(application_id)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (customer_id)
+        REFERENCES Customers(customer_id)
+        ON DELETE CASCADE
+);
